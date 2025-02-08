@@ -25,7 +25,7 @@ function MainRoute() {
 
       {/* Protected Routes (Require Authentication) */}
       {/* Uncomment the following line if you implement AuthRoute */}
-      <Route element={<AuthRoute />}>
+      <Route >
         <Route path="/admin" element={<Admin />} />
         <Route path="/banner" element={<BannerPage />} />
         <Route path="/enquery" element={<Home />} />
