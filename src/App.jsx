@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Admin from "./Components/Admin";
 import Register from "./AdminLoginPage/Register";
@@ -21,37 +22,32 @@ import GameDevlope from "./ServicesPages/GameDevlope";
 import MobileApp from "./ServicesPages/MobileApp";
 import Maintenance from "./ServicesPages/Maintenance";
 import Ecommerce from "./ServicesPages/Ecommerce";
-
+import AuthRoute from "./MainRoute/ProtectedRouting";
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (user) {
-      setIsLoggedIn(true); 
+      setIsAuthenticated(true);
     }
   }, []);
 
-  const handleLogin = (userdata) => {
-    setIsLoggedIn(true);
-    localStorage.setItem("user", JSON.stringify(userdata));
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("user");
-  };
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={isLoggedIn ? <Navigate to="/admin" /> : <Login onLogin={handleLogin} />} />
+    
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
       <Route path="/register" element={<Register />} />
-      {/* Admin Route (Protected) */}
       <Route 
-        path="/admin" 
-        element={isLoggedIn ? <Admin onLogout={handleLogout} /> : <Navigate to="/" />} 
+        path="/login/admin" 
+        element={
+          <AuthRoute 
+            element={<Admin />} 
+            isAuthenticated={isAuthenticated} 
+          />
+        }
       />
-      {/* Other Routes */}
       <Route path="/banner" element={<BannerPage />} />
       <Route path="/enquery" element={<Home />} />
       <Route path="/services" element={<Services />} />
@@ -59,10 +55,10 @@ function App() {
       <Route path="/videos" element={<Videos />} />
       <Route path="/client" element={<Clients />} />
       <Route path="/blogs" element={<Blogs />} />
-      <Route path="/portfolio" element={<Portfolio />} />
+      <Route path="/porfolio" element={<Portfolio />} />
       <Route path="/health" element={<Healthcare />} />
       <Route path="/it" element={<IT />} />
-      <Route path="/testimonials" element={<Testlmonials />} />
+      <Route path="/Testlmonials" element={<Testlmonials />} />
       <Route path="/services/design" element={<Design />} />
       <Route path="/services/development" element={<Development />} />
       <Route path="/services/marketing" element={<Marketing />} />
