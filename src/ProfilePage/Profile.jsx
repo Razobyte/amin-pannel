@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import navigate
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -14,9 +14,8 @@ import Logout from '@mui/icons-material/Logout';
 
 export default function Profile() {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [isLoggedOut, setIsLoggedOut] = useState(false); // Manage logout state
   const open = Boolean(anchorEl);
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -26,27 +25,28 @@ export default function Profile() {
     setAnchorEl(null);
   };
 
-  // const logout = () => {
-  //   setIsLoggedOut(true);
-  //   console.log('Logout function called, state updated to:', true);
-  // };
-
   const datalogout = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
     try {
-      const response = await axios.post('/api/logout', {}, {
-        withCredentials: true, // Include cookies if needed
+      const response = await axios.post("http://13.202.251.211/api/logout", {}, {
+        withCredentials: true, 
+        credentials: "include",  // Ensures cookies are sent
       });
-      
-      console.log('Logged out successfully:', response.userdata);
-
-      // logout(); // Update state to reflect logout
-
-      navigate('/'); // Redirect to home or login page
+  
+      console.log("Logged out successfully:", response.data);
+  
+      // Clear local storage & session
+      localStorage.clear();
+      sessionStorage.clear();
+  
+      // Redirect to login page
+      navigate("/login");
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
+      alert("Logout failed. Check network & try again.");
     }
   };
+  
 
   return (
     <React.Fragment>
@@ -55,14 +55,12 @@ export default function Profile() {
           <IconButton
             onClick={handleClick}
             size="small"
-            sx={{
-              ml: 2,
-            }}
+            sx={{ ml: 2 }}
             aria-controls={open ? 'account-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
           >
-            <Avatar sx={{ width: 36, height: 36, }}></Avatar>
+            <Avatar sx={{ width: 36, height: 36 }}></Avatar>
           </IconButton>
         </Tooltip>
       </Box>
@@ -113,7 +111,7 @@ export default function Profile() {
         </MenuItem>
         <MenuItem
           onClick={(e) => {
-            datalogout(e); // Pass event to the function
+            datalogout(e); // Call logout function
             handleClose(); // Close the menu
           }}
         >

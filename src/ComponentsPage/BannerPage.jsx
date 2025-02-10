@@ -40,6 +40,7 @@ const BannerPage = () => {
   });
   const [uploadStatus, setUploadStatus] = useState(""); // Track upload status
 
+<<<<<<< HEAD
   // Fetch uploaded images from the server on component mount
   useEffect(() => {
     fetchUploadedImages();
@@ -65,11 +66,12 @@ const BannerPage = () => {
   };
 
   // Handle file selection
+=======
+>>>>>>> 72de806 (Updated BannerPage component)
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
   };
 
-  // Handle title changes
   const handleTitleChange1 = (e) => {
     setTitle1(e.target.value);
   };
@@ -97,7 +99,6 @@ const BannerPage = () => {
     }
   };
 
-  // Handle upload form submission
   const handleUpload = async (e) => {
     e.preventDefault();
     if ((!title1 && !title2) || files.length === 0) {
@@ -116,7 +117,7 @@ const BannerPage = () => {
           filename: file.name,
           path: URL.createObjectURL(file),
           status: "Inactive",
-          sortOrder: "", // Can be set later
+          sortOrder: "",
         });
       }
     }
@@ -124,17 +125,15 @@ const BannerPage = () => {
     setTitle1("");
     setTitle2("");
     setFiles([]);
-    setUploadStatus(""); // Clear upload status
+    setUploadStatus("");
   };
 
-  // Handle delete
   const handleDelete = (id) => {
     setUploadedImages((prevImages) =>
       prevImages.filter((image) => image.id !== id)
     );
   };
 
-  // Handle edit
   const handleEdit = (id) => {
     const imageToEdit = uploadedImages.find((image) => image.id === id);
     setFormData({
