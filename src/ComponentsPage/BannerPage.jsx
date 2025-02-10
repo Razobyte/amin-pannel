@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Button,
@@ -40,6 +40,30 @@ const BannerPage = () => {
   });
   const [uploadStatus, setUploadStatus] = useState(""); // Track upload status
 
+  // Fetch uploaded images from the server on component mount
+  useEffect(() => {
+    fetchUploadedImages();
+  }, []);
+
+  // Fetch uploaded images
+  const fetchUploadedImages = async () => {
+    try {
+      const response = await axios.get("http://13.202.251.211/api/find");
+      // Ensure the response is an array of image objects
+      if (Array.isArray(response.data.files)) {
+        const fullImagePaths = response.data.files.map((file) => ({
+          path: `http://13.202.251.211${file}`, // Prepend the base URL
+          filename: file.split('/').pop(), // Extract file name from path
+        }));
+        setUploadedImages(fullImagePaths);
+      } else {
+        console.error("Response data is not an array");
+      }
+    } catch (error) {
+      console.error("Error fetching uploaded images:", error);
+    }
+  };
+
   // Handle file selection
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
@@ -57,8 +81,14 @@ const BannerPage = () => {
   // API call to upload image
   const uploadImage = async (file) => {
     try {
-      setUploadStatus("Uploading...");
-      const response = await axios.get("http://13.202.251.211/api/find");
+      const data = new FormData();
+      data.append("image", file);
+      const response = await axios.post("http://13.202.251.211/api/image", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setUploadStatus("Upload complete!");
       return response.data;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -70,7 +100,6 @@ const BannerPage = () => {
   // Handle upload form submission
   const handleUpload = async (e) => {
     e.preventDefault();
-
     if ((!title1 && !title2) || files.length === 0) {
       setError("Please provide titles and select at least one image.");
       return;
@@ -91,7 +120,6 @@ const BannerPage = () => {
         });
       }
     }
-
     setUploadedImages([...uploadedImages, ...uploaded]);
     setTitle1("");
     setTitle2("");
@@ -101,7 +129,9 @@ const BannerPage = () => {
 
   // Handle delete
   const handleDelete = (id) => {
-    setUploadedImages((prevImages) => prevImages.filter((image) => image.id !== id));
+    setUploadedImages((prevImages) =>
+      prevImages.filter((image) => image.id !== id)
+    );
   };
 
   // Handle edit
@@ -286,56 +316,28 @@ const BannerPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {uploadedImages.map((image) => (
-                <TableRow key={image.id}>
-                  <TableCell align="center" sx={{ padding: "4px" }}>
-                    <img
-                      src={image.path}
-                      alt={image.filename}
-                      style={{
-                        width: "80px",
-                        height: "60px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
-                    {image.filename}
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
-                    <Button
-                      variant="outlined"
-                      color={image.status === "Active" ? "success" : "default"}
-                      onClick={() => toggleStatus(image.id)}
-                      sx={{ fontSize: "0.75rem", padding: "4px 8px" }}
-                    >
-                      {image.status}
-                    </Button>
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
-                    {image.sortOrder}
-                  </TableCell>
-                  <TableCell align="center" sx={{ padding: "4px" }}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={() => handleEdit(image.id)}
-                      sx={{ marginRight: 1, fontSize: "0.75rem", padding: "4px 8px" }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      onClick={() => handleDelete(image.id)}
-                      sx={{ fontSize: "0.75rem", padding: "4px 8px" }}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {uploadedImages.map((image,index) => (
+                    <TableRow key={index}>
+                    <TableCell align="center" sx={{ padding: "4px" }}>
+                      <img
+                        src={image.path}// Use the full image URL
+                        alt={image.filename}
+                        style={{
+                          width: "80px",
+                          height: "60px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
+                      {image.filename}
+                    </TableCell>
+                    {/* Add other columns as needed */}
+                  </TableRow>
+                ))}
+              
+            
             </TableBody>
           </Table>
         </TableContainer>
