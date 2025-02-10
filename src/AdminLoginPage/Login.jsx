@@ -71,5 +71,4 @@ function Login({ setIsAuthenticated }) {
     </Box>
   );
 }
-
 export default Login;

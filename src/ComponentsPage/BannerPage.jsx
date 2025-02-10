@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   Button,
   TextField,
@@ -37,11 +38,14 @@ const BannerPage = () => {
     status: "Inactive",
     sortOrder: "", // Added sortOrder field
   });
+  const [uploadStatus, setUploadStatus] = useState(""); // Track upload status
 
+  // Handle file selection
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
   };
 
+  // Handle title changes
   const handleTitleChange1 = (e) => {
     setTitle1(e.target.value);
   };
@@ -50,34 +54,57 @@ const BannerPage = () => {
     setTitle2(e.target.value);
   };
 
-  const handleUpload = (e) => {
+  // API call to upload image
+  const uploadImage = async (file) => {
+    try {
+      setUploadStatus("Uploading...");
+      const response = await axios.get("http://13.202.251.211/api/find");
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploadStatus("Upload failed");
+      return null;
+    }
+  };
+
+  // Handle upload form submission
+  const handleUpload = async (e) => {
     e.preventDefault();
 
     if ((!title1 && !title2) || files.length === 0) {
       setError("Please provide titles and select at least one image.");
       return;
     }
+    setError("");
+    const uploaded = [];
+    for (const file of files) {
+      const responseData = await uploadImage(file);
+      if (responseData) {
+        uploaded.push({
+          id: uploadedImages.length + uploaded.length + 1,
+          title1,
+          title2,
+          filename: file.name,
+          path: URL.createObjectURL(file),
+          status: "Inactive",
+          sortOrder: "", // Can be set later
+        });
+      }
+    }
 
-    const newImages = Array.from(files).map((file, index) => ({
-      id: uploadedImages.length + index + 1,
-      title1,
-      title2,
-      filename: file.name,
-      path: URL.createObjectURL(file),
-      status: "Inactive",
-    }));
-
-    setUploadedImages([...uploadedImages, ...newImages]);
+    setUploadedImages([...uploadedImages, ...uploaded]);
     setTitle1("");
     setTitle2("");
     setFiles([]);
-    setError("");
+    setUploadStatus(""); // Clear upload status
   };
 
+  // Handle delete
   const handleDelete = (id) => {
     setUploadedImages((prevImages) => prevImages.filter((image) => image.id !== id));
   };
 
+  // Handle edit
   const handleEdit = (id) => {
     const imageToEdit = uploadedImages.find((image) => image.id === id);
     setFormData({
@@ -90,11 +117,7 @@ const BannerPage = () => {
     setFormDialogOpen(true);
   };
 
-  
-  const handleDialogOpen = () => {
-    setFormDialogOpen(true);
-  };
-
+  const handleDialogOpen = () => setFormDialogOpen(true);
   const handleDialogClose = () => {
     setFormDialogOpen(false);
     setFormData({
@@ -102,7 +125,7 @@ const BannerPage = () => {
       description: "",
       image: null,
       status: "Inactive",
-      sortOrder: "", 
+      sortOrder: "",
     });
   };
 
@@ -124,7 +147,7 @@ const BannerPage = () => {
         filename: formData.image.name,
         path: URL.createObjectURL(formData.image),
         status: formData.status,
-        sortOrder: formData.sortOrder, 
+        sortOrder: formData.sortOrder,
       };
       setUploadedImages([...uploadedImages, newImage]);
       handleDialogClose();
@@ -140,115 +163,113 @@ const BannerPage = () => {
       )
     );
   };
-  
 
   return (
     <>
-    <Box sx={{ padding: 3, fontFamily: "Arial, sans-serif" }}>
-      <Typography variant="h4" gutterBottom sx={{ fontSize: "1.5rem" }}>
-        Image Upload
-      </Typography>
-
-      <form onSubmit={handleUpload}>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleDialogOpen}
-            startIcon={<AddIcon />}
-            sx={{
-              padding: "8px 16px",
-              cursor: "pointer",
-              fontSize: "0.875rem",
-            }}
-          >
-            Add Banner
-          </Button>
-        </Box>
-      </form>
-
-      {error && (
-        <Typography variant="body2" color="error" sx={{ marginTop: 2, fontSize: "0.875rem" }}>
-          {error}
+      <Box sx={{ padding: 3, fontFamily: "Arial, sans-serif" }}>
+        <Typography variant="h4" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          Image Upload
         </Typography>
-      )}
 
-      <Dialog open={formDialogOpen} onClose={handleDialogClose}>
-        <DialogTitle sx={{ fontSize: "1.25rem" }}>Add New Entry</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Title"
-            name="title"
-            variant="outlined"
-            fullWidth
-            sx={{ marginBottom: 2, fontSize: "0.875rem" }}
-            value={formData.title}
-            onChange={handleFormChange}
-          />
-          <TextField
-            label="Description"
-            name="description"
-            variant="outlined"
-            fullWidth
-            sx={{ marginBottom: 2, fontSize: "0.875rem" }}
-            value={formData.description}
-            onChange={handleFormChange}
-          />
-          <Box sx={{ marginBottom: 2 }}>
-            <Typography variant="body1" gutterBottom sx={{ fontSize: "0.875rem" }}>
-              Upload Image:
-            </Typography>
+        <form onSubmit={handleUpload}>
+          <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="contained"
-              component="label"
-              sx={{ padding: "8px 16px", cursor: "pointer", fontSize: "0.875rem" }}
+              color="primary"
+              onClick={handleDialogOpen}
+              startIcon={<AddIcon />}
+              sx={{
+                padding: "8px 16px",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+              }}
             >
-              Choose Image
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFormImageChange}
-                hidden
-              />
+              Add Banner
             </Button>
           </Box>
+        </form>
 
-          {/* Sort Order Dropdown */}
-          <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Sort Order</InputLabel>
-            <Select
-              name="sortOrder"
-              value={formData.sortOrder}
+        {error && (
+          <Typography variant="body2" color="error" sx={{ marginTop: 2, fontSize: "0.875rem" }}>
+            {error}
+          </Typography>
+        )}
+
+        <Dialog open={formDialogOpen} onClose={handleDialogClose}>
+          <DialogTitle sx={{ fontSize: "1.25rem" }}>Add New Entry</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Title"
+              name="title"
+              variant="outlined"
+              fullWidth
+              sx={{ marginBottom: 2, fontSize: "0.875rem" }}
+              value={formData.title}
               onChange={handleFormChange}
-              label="Sort Order"
-            >
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-              <MenuItem value={4}>4</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} sx={{ fontSize: "0.875rem" }}>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={handleFormSubmit} sx={{ fontSize: "0.875rem" }}>
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
+            />
+            <TextField
+              label="Description"
+              name="description"
+              variant="outlined"
+              fullWidth
+              sx={{ marginBottom: 2, fontSize: "0.875rem" }}
+              value={formData.description}
+              onChange={handleFormChange}
+            />
+            <Box sx={{ marginBottom: 2 }}>
+              <Typography variant="body1" gutterBottom sx={{ fontSize: "0.875rem" }}>
+                Upload Image:
+              </Typography>
+              <Button
+                variant="contained"
+                component="label"
+                sx={{ padding: "8px 16px", cursor: "pointer", fontSize: "0.875rem" }}
+              >
+                Choose Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFormImageChange}
+                  hidden
+                />
+              </Button>
+            </Box>
 
-      <Typography variant="h5" sx={{ marginTop: 4, fontSize: "1.25rem" }}>
-        Uploaded Banners
-      </Typography>
-      {uploadedImages.length > 0 ? (
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <InputLabel>Sort Order</InputLabel>
+              <Select
+                name="sortOrder"
+                value={formData.sortOrder}
+                onChange={handleFormChange}
+                label="Sort Order"
+              >
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={3}>3</MenuItem>
+                <MenuItem value={4}>4</MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose} sx={{ fontSize: "0.875rem" }}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleFormSubmit} sx={{ fontSize: "0.875rem" }}>
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Typography variant="h5" sx={{ marginTop: 4, fontSize: "1.25rem" }}>
+          Uploaded Banners
+        </Typography>
+
         <TableContainer component={Paper} sx={{ marginTop: 2, padding: 1 }}>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
-                  Banner {/* Changed from Image to Banner */}
+                  Banner
                 </TableCell>
                 <TableCell align="center" sx={{ fontSize: "0.75rem", padding: "4px" }}>
                   File Name
@@ -272,10 +293,10 @@ const BannerPage = () => {
                       src={image.path}
                       alt={image.filename}
                       style={{
-                        width: "80px",  
-                        height: "60px", 
+                        width: "80px",
+                        height: "60px",
                         objectFit: "cover",
-                        borderRadius: "8px", 
+                        borderRadius: "8px",
                       }}
                     />
                   </TableCell>
@@ -318,12 +339,7 @@ const BannerPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      ) : (
-        <Typography variant="body1" sx={{ marginTop: 2, fontSize: "0.875rem" }}>
-          No banners uploaded yet.
-        </Typography>
-      )}
-    </Box>
+      </Box>
     </>
   );
 };
